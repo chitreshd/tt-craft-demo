@@ -1,0 +1,14 @@
+# Project Rules for AI Assistant
+
+## Documentation
+- **Do NOT create summary or implementation explanation MD files**
+- Only create new MD files when explicitly requested by the user
+- Keep documentation in existing files: README.md, backend/README.md, frontend/README.md, etc.
+
+## Code Changes
+- Make direct code changes without creating summary documents
+- Explain changes conversationally in responses, not in new files
+
+## Exceptions
+- Architecture Decision Records (ADRs) in backend/ARCHITECTURE_DECISIONS.md are OK to update
+- User explicitly requests a new documentation file

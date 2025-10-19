@@ -19,7 +19,7 @@ func RegisterRoutes(app *fiber.App, db *sqlx.DB) {
 		return c.JSON(status)
 	})
 
-	api.Post("/status/explain", ExplainHandler)
+	api.Post("/status/explain", ExplainHandler(db))
 	
 	app.Post("/internal/scrape", func(c *fiber.Ctx) error {
 		returnID, err := store.InsertDemoReturn(db)

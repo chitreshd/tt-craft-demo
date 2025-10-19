@@ -1,0 +1,310 @@
+openapi: 3.0.3
+info:
+  title: TurboTax Refund Status API
+  description: |
+    API for tracking tax refund status with real-time updates and AI-powered explanations.
+    
+    ## Features
+    - Real-time refund status tracking
+    - Server-Sent Events (SSE) for streaming explanations
+    - ULID-based identifiers for distributed systems
+    - Complete refund history timelines
+    
+    ## Base URL
+    - Development: `http://localhost:8080`
+    - Docker: `http://backend:8080`
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://github.com/chitreshd/tt-craft-demo
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: http://localhost:8080
+    description: Docker environment
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Refund Status
+    description: Refund status tracking and queries
+  - name: Internal
+    description: Internal/admin endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the API service is healthy and running
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: refund-demo
+              example:
+                status: healthy
+                service: refund-demo
+
+  /v1/status/{id}:
+    get:
+      tags:
+        - Refund Status
+      summary: Get refund status by ID
+      description: |
+        Retrieve detailed refund status information including history, ETA, and confidence score.
+        
+        The ID should be a ULID (26 characters, lexicographically sortable).
+      operationId: getRefundStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ULID of the tax return
+          schema:
+            type: string
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+            example: 01HZDEM0001AAAAAAAAAAAAAAA
+      responses:
+        '200':
+          description: Refund status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundStatus'
+              example:
+                return_id: 01HZDEM0001AAAAAAAAAAAAAAA
+                filing_id: 01HZFIL0001AAAAAAAAAAAAAAA
+                status: FILED
+                eta_date: "2025-11-07T00:00:00Z"
+                confidence: 0.85
+                history:
+                  - stage: FILED
+                    timestamp: "2025-10-15T12:00:00Z"
+                snap_context:
+                  demo: true
+                  description: Recently filed return
+                  scenario: 1
+                  amount: 5000
+                created_at: "2025-10-15T12:00:00Z"
+        '404':
+          description: Return not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not found
+
+  /v1/status/explain:
+    post:
+      tags:
+        - Refund Status
+      summary: Stream AI explanation (SSE)
+      description: |
+        Get an AI-powered explanation for refund delays via Server-Sent Events (SSE).
+        
+        This endpoint streams responses in real-time. The response uses `text/event-stream` 
+        content type and sends data in the format:
+        ```
+        data: <message text>
+        
+        data: [DONE]
+        ```
+      operationId: explainRefundDelay
+      requestBody:
+        description: Request parameters for explanation (optional)
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                return_id:
+                  type: string
+                  description: ULID of the return (optional)
+                  example: 01HZDEM0001AAAAAAAAAAAAAAA
+                question:
+                  type: string
+                  description: Specific question about the delay (optional)
+                  example: Why is my refund delayed?
+      responses:
+        '200':
+          description: SSE stream of explanation text
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  data: It looks like your refund is taking a little longer than usual...
+                  
+                  data: High-income filers and early submissions are often reviewed more carefully...
+                  
+                  data: You can expect your deposit around March 20, with 94% confidence.
+                  
+                  data: [DONE]
+
+  /internal/scrape:
+    post:
+      tags:
+        - Internal
+      summary: Insert demo data
+      description: |
+        Manually trigger insertion of a single demo refund return.
+        
+        This is an internal/admin endpoint used for testing and demos.
+        In production, this would typically be protected with authentication.
+      operationId: insertDemoData
+      responses:
+        '200':
+          description: Demo data inserted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: demo data inserted
+                  return_id:
+                    type: string
+                    description: ULID of the newly created return
+                    example: 01HZDEM0001AAAAAAAAAAAAAAA
+              example:
+                message: demo data inserted
+                return_id: 01HZDEM0001AAAAAAAAAAAAAAA
+        '500':
+          description: Failed to insert demo data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    RefundStatus:
+      type: object
+      properties:
+        return_id:
+          type: string
+          description: ULID identifier for the return
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          example: 01HZDEM0001AAAAAAAAAAAAAAA
+        filing_id:
+          type: string
+          description: ULID identifier for the filing
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          example: 01HZFIL0001AAAAAAAAAAAAAAA
+        status:
+          type: string
+          description: Current refund status
+          enum:
+            - FILED
+            - ACCEPTED
+            - APPROVED
+            - REVIEW
+            - SENT
+            - COMPLETED
+          example: FILED
+        eta_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Estimated refund date
+          example: "2025-11-07T00:00:00Z"
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score for the ETA (0.0 to 1.0)
+          example: 0.85
+        history:
+          type: array
+          description: Array of status change history
+          items:
+            $ref: '#/components/schemas/RefundHistory'
+        snap_context:
+          type: object
+          description: Additional context data (flexible JSONB)
+          additionalProperties: true
+          example:
+            demo: true
+            description: Recently filed return
+            scenario: 1
+            amount: 5000
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when record was created
+          example: "2025-10-15T12:00:00Z"
+      required:
+        - return_id
+        - filing_id
+        - status
+        - confidence
+        - history
+        - snap_context
+        - created_at
+
+    RefundHistory:
+      type: object
+      properties:
+        stage:
+          type: string
+          description: Status stage name
+          enum:
+            - FILED
+            - ACCEPTED
+            - APPROVED
+            - REVIEW
+            - SENT
+            - COMPLETED
+          example: FILED
+        timestamp:
+          type: string
+          format: date-time
+          description: When this stage was reached
+          example: "2025-10-15T12:00:00Z"
+      required:
+        - stage
+        - timestamp
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: not found
+      required:
+        - error
+
+  securitySchemes:
+    # Future: Add authentication schemes here
+    # bearerAuth:
+    #   type: http
+    #   scheme: bearer
+    #   bearerFormat: JWT
+    pass:
+      type: http
+      scheme: basic
+
+# Future: Apply security globally or per-operation
+# security:
+#   - bearerAuth: []

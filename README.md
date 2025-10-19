@@ -188,6 +188,17 @@ internal/     → Private application code
 | POST | `/v1/status/explain` | Stream AI explanation (SSE) |
 | POST | `/internal/scrape` | Manually insert demo data |
 
+### API Documentation
+
+- **OpenAPI Spec**: [`backend/openapi.yaml`](backend/openapi.yaml) - Complete API specification (OpenAPI 3.0)
+- **Postman Collection**: [`backend/postman_collection.json`](backend/postman_collection.json) - Import into Postman
+
+**Quick Start with Postman:**
+1. Open Postman → Import
+2. Select `backend/postman_collection.json`
+3. Set `baseUrl` to `http://localhost:8080`
+4. Try the requests!
+
 ### Database Schema
 
 ```sql

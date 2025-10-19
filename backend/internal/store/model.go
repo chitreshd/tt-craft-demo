@@ -19,4 +19,5 @@ type RefundReturn struct {
 	HistoryJSON json.RawMessage `db:"history" json:"history"`
 	SnapContext json.RawMessage `db:"snap_context" json:"snap_context"`
 	CreatedAt   time.Time       `db:"created_at" json:"created_at"`
+	UpdatedAt   time.Time       `db:"updated_at" json:"updated_at"`
 }

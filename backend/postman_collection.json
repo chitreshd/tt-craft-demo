@@ -1,0 +1,381 @@
+{
+  "info": {
+    "name": "TurboTax Refund Status API",
+    "description": "API for tracking tax refund status with real-time updates and AI-powered explanations.\n\n## Features\n- Real-time refund status tracking\n- Server-Sent Events (SSE) for streaming explanations\n- ULID-based identifiers\n- Complete refund history timelines\n\n## Setup\n1. Set the `baseUrl` variable to your backend URL\n2. Optionally set `return_id` for specific return queries",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "turbotax-refund-demo"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "return_id",
+      "value": "01HZDEM0001AAAAAAAAAAAAAAA",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Check if the API service is healthy and running.\n\n**Expected Response:**\n```json\n{\n  \"status\": \"healthy\",\n  \"service\": \"refund-demo\"\n}\n```"
+          },
+          "response": [
+            {
+              "name": "Successful Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/health",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"healthy\",\n  \"service\": \"refund-demo\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Health check endpoints for monitoring service availability"
+    },
+    {
+      "name": "Refund Status",
+      "item": [
+        {
+          "name": "Get Refund Status by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/status/{{return_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "status",
+                "{{return_id}}"
+              ]
+            },
+            "description": "Retrieve detailed refund status information including history, ETA, and confidence score.\n\n**Parameters:**\n- `id` (path): ULID of the tax return (26 characters)\n\n**Response includes:**\n- Current status (FILED, ACCEPTED, APPROVED, SENT, COMPLETED, REVIEW)\n- Estimated refund date (eta_date)\n- Confidence score (0.0 to 1.0)\n- Complete history timeline\n- Additional context metadata\n\n**Example ULIDs to try:**\n- `01HZDEM0001AAAAAAAAAAAAAAA` - Recently filed\n- `01HZDEM0003CCCCCCCCCCCCCC` - Approved\n- `01HZDEM0005EEEEEEEEEEEEEE` - Completed"
+          },
+          "response": [
+            {
+              "name": "Success - Filed Return",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/01HZDEM0001AAAAAAAAAAAAAAA",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    "01HZDEM0001AAAAAAAAAAAAAAA"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"return_id\": \"01HZDEM0001AAAAAAAAAAAAAAA\",\n  \"filing_id\": \"01HZFIL0001AAAAAAAAAAAAAAA\",\n  \"status\": \"FILED\",\n  \"eta_date\": \"2025-11-07T00:00:00Z\",\n  \"confidence\": 0.85,\n  \"history\": [\n    {\n      \"stage\": \"FILED\",\n      \"timestamp\": \"2025-10-15T12:00:00Z\"\n    }\n  ],\n  \"snap_context\": {\n    \"demo\": true,\n    \"description\": \"Recently filed return\",\n    \"scenario\": 1,\n    \"amount\": 5000\n  },\n  \"created_at\": \"2025-10-15T12:00:00Z\"\n}"
+            },
+            {
+              "name": "Success - Approved Return",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/01HZDEM0003CCCCCCCCCCCCCC",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    "01HZDEM0003CCCCCCCCCCCCCC"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"return_id\": \"01HZDEM0003CCCCCCCCCCCCCC\",\n  \"filing_id\": \"01HZFIL0003CCCCCCCCCCCCCC\",\n  \"status\": \"APPROVED\",\n  \"eta_date\": \"2025-10-24T00:00:00Z\",\n  \"confidence\": 0.94,\n  \"history\": [\n    {\n      \"stage\": \"FILED\",\n      \"timestamp\": \"2025-10-03T12:00:00Z\"\n    },\n    {\n      \"stage\": \"ACCEPTED\",\n      \"timestamp\": \"2025-10-05T12:00:00Z\"\n    },\n    {\n      \"stage\": \"APPROVED\",\n      \"timestamp\": \"2025-10-14T12:00:00Z\"\n    }\n  ],\n  \"snap_context\": {\n    \"demo\": true,\n    \"description\": \"Approved and payment processing\",\n    \"scenario\": 3,\n    \"amount\": 6000\n  },\n  \"created_at\": \"2025-10-03T12:00:00Z\"\n}"
+            },
+            {
+              "name": "Error - Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/INVALID_ID",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    "INVALID_ID"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Explain Refund Delay (SSE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"return_id\": \"{{return_id}}\",\n  \"question\": \"Why is my refund delayed?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/status/explain",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "status",
+                "explain"
+              ]
+            },
+            "description": "Get an AI-powered explanation for refund delays via Server-Sent Events (SSE).\n\n**Request Body (Optional):**\n```json\n{\n  \"return_id\": \"01HZDEM0001AAAAAAAAAAAAAAA\",\n  \"question\": \"Why is my refund delayed?\"\n}\n```\n\n**Response Format:**\nThis endpoint streams responses using Server-Sent Events (SSE).\n\n```\ndata: It looks like your refund is taking a little longer than usual...\n\ndata: High-income filers and early submissions are often reviewed more carefully...\n\ndata: You can expect your deposit around March 20, with 94% confidence.\n\ndata: [DONE]\n```\n\n**Note:** Postman may not display SSE streams well. Use `curl -N` for better testing:\n```bash\ncurl -N http://localhost:8080/v1/status/explain\n```"
+          },
+          "response": [
+            {
+              "name": "Success - SSE Stream",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"return_id\": \"01HZDEM0001AAAAAAAAAAAAAAA\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/explain",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    "explain"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/event-stream"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-cache"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                }
+              ],
+              "body": "data: It looks like your refund is taking a little longer than usual...\n\ndata: High-income filers and early submissions are often reviewed more carefully...\n\ndata: You can expect your deposit around March 20, with 94% confidence.\n\ndata: [DONE]\n\n"
+            }
+          ]
+        }
+      ],
+      "description": "Endpoints for querying and tracking refund status"
+    },
+    {
+      "name": "Internal / Admin",
+      "item": [
+        {
+          "name": "Insert Demo Data",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/internal/scrape",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "internal",
+                "scrape"
+              ]
+            },
+            "description": "Manually trigger insertion of a single demo refund return.\n\nThis is an internal/admin endpoint used for testing and demos. In production, this would typically be protected with authentication.\n\n**Use this to:**\n- Create test data\n- Demo the system\n- Get a new return_id for testing\n\n**Response:**\n```json\n{\n  \"message\": \"demo data inserted\",\n  \"return_id\": \"01HZDEM0001AAAAAAAAAAAAAAA\"\n}\n```\n\nThe returned `return_id` can be used to query the status endpoint."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/internal/scrape",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "internal",
+                    "scrape"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"demo data inserted\",\n  \"return_id\": \"01HZDEM0001AAAAAAAAAAAAAAA\"\n}"
+            },
+            {
+              "name": "Error - Failed to Insert",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/internal/scrape",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "internal",
+                    "scrape"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"failed to insert demo data\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Internal and administrative endpoints (should be protected in production)"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.variables.set('timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-save return_id from responses",
+          "if (pm.response.code === 200) {",
+          "    try {",
+          "        const jsonData = pm.response.json();",
+          "        if (jsonData.return_id) {",
+          "            pm.collectionVariables.set('return_id', jsonData.return_id);",
+          "            console.log('Saved return_id:', jsonData.return_id);",
+          "        }",
+          "    } catch (e) {",
+          "        // Not JSON or no return_id",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ]
+}

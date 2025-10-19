@@ -49,6 +49,24 @@ A Go-based backend service for tracking and explaining tax refund status, built 
   curl http://localhost:8080/health
   ```
 
+### API Documentation
+
+**OpenAPI Specification**: `openapi.yaml`
+- Complete API spec in OpenAPI 3.0 format
+- Includes all endpoints, schemas, and examples
+- View in Swagger Editor: https://editor.swagger.io
+
+**Postman Collection**: `postman_collection.json`
+- Ready-to-import Postman collection
+- Pre-configured requests with examples
+- Collection variables for easy configuration
+
+**To use in Postman:**
+1. Open Postman → Import → Upload Files
+2. Select `backend/postman_collection.json`
+3. Set `baseUrl` variable to `http://localhost:8080`
+4. Try the example requests!
+
 ## 🗄️ Database Schema
 
 ```sql

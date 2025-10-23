@@ -2,6 +2,12 @@
 
 A full-stack production-ready application that mimics TurboTax's refund tracking system with live status updates, AI-powered explanations, and IRS data integration.
 
+
+https://github.com/user-attachments/assets/12099af0-3549-413d-9f8b-f3db89e9431a
+
+
+
+
 **Tech Stack:** Go (Fiber) + PostgreSQL + Next.js (TypeScript) + Docker
 
 ---

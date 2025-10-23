@@ -1,29 +1,34 @@
 import { NextRequest } from 'next/server'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+const API_BASE_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { return_id, question } = body
+    const { return_id, question, use_backend } = body
 
-    // For demo purposes, you can either stream from backend or return mock stream
-    // Uncomment the following to stream from actual backend:
-    // const response = await fetch(`${API_BASE_URL}/v1/status/explain`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ return_id, question })
-    // })
-    // if (!response.ok) throw new Error('Failed to get explanation')
-    // return new Response(response.body, {
-    //   headers: {
-    //     'Content-Type': 'text/event-stream',
-    //     'Cache-Control': 'no-cache',
-    //     'Connection': 'keep-alive',
-    //   },
-    // })
+    // If use_backend is true, stream from actual backend
+    if (use_backend) {
+      const response = await fetch(`${API_BASE_URL}/v1/status/explain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ return_id, question })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to get explanation from backend')
+      }
+      
+      return new Response(response.body, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      })
+    }
 
-    // Mock streaming response for demo
+    // Otherwise, use mock streaming response for demo
     const encoder = new TextEncoder()
     const mockExplanation = `Based on your refund status, here's what's happening:
 

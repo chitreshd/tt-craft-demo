@@ -38,7 +38,7 @@ func ExplainHandler(db *sqlx.DB) fiber.Handler {
 
 		c.Context().SetBodyStreamWriter(fasthttp.StreamWriter(func(w *bufio.Writer) {
 			// Step 1: Show thinking step - Analyzing return
-			fmt.Fprintf(w, "data: 🔍 Analyzing your return...\n\n")
+			fmt.Fprintf(w, "data: {\"type\":\"step\",\"content\":\"🔍 Analyzing your return...\"}\n\n")
 			w.Flush()
 			time.Sleep(300 * time.Millisecond)
 
@@ -53,12 +53,12 @@ func ExplainHandler(db *sqlx.DB) fiber.Handler {
 			}
 
 			// Step 2: Show thinking step - Checking IRS data
-			fmt.Fprintf(w, "data: 📊 Checking IRS processing times...\n\n")
+			fmt.Fprintf(w, "data: {\"type\":\"step\",\"content\":\"📊 Checking IRS processing times...\"}\n\n")
 			w.Flush()
 			time.Sleep(300 * time.Millisecond)
 
 			// Step 3: Show thinking step - Generating explanation
-			fmt.Fprintf(w, "data: 🤖 Generating personalized explanation...\n\n")
+			fmt.Fprintf(w, "data: {\"type\":\"step\",\"content\":\"🤖 Generating personalized explanation...\"}\n\n")
 			w.Flush()
 			time.Sleep(300 * time.Millisecond)
 
@@ -96,12 +96,12 @@ func streamDemoExplanation(w *bufio.Writer, refundData *store.RefundReturn) {
 	}
 
 	for _, msg := range chunks {
-		fmt.Fprintf(w, "data: %s\n\n", msg)
+		fmt.Fprintf(w, "data: {\"type\":\"content\",\"content\":\"%s\"}\n\n", msg)
 		w.Flush()
 		time.Sleep(400 * time.Millisecond)
 	}
 
-	fmt.Fprint(w, "data: [DONE]\n\n")
+	fmt.Fprint(w, "data: {\"type\":\"done\"}\n\n")
 	w.Flush()
 }
 
@@ -146,14 +146,15 @@ Be concise, friendly, and provide actionable information. Keep responses under 1
 	stream, err := client.CreateChatCompletionStream(ctx, req)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to create OpenAI stream")
-		fmt.Fprintf(w, "data: Error connecting to AI service. Please try again.\n\n")
-		fmt.Fprint(w, "data: [DONE]\n\n")
+		fmt.Fprintf(w, "data: {\"type\":\"error\",\"content\":\"Error connecting to AI service. Please try again.\"}\n\n")
+		fmt.Fprint(w, "data: {\"type\":\"done\"}\n\n")
 		w.Flush()
 		return
 	}
 	defer stream.Close()
 
-	// Stream OpenAI response
+	// Stream OpenAI response with proper chunking
+	accumulatedContent := ""
 	for {
 		response, err := stream.Recv()
 		if err == io.EOF {
@@ -167,13 +168,25 @@ Be concise, friendly, and provide actionable information. Keep responses under 1
 		if len(response.Choices) > 0 {
 			content := response.Choices[0].Delta.Content
 			if content != "" {
-				// Send each chunk via SSE
-				fmt.Fprintf(w, "data: %s\n\n", content)
-				w.Flush()
+				accumulatedContent += content
+
+				// Send content chunks - accumulate until we have meaningful chunks
+				// This reduces the number of SSE events while maintaining responsiveness
+				if len(accumulatedContent) >= 10 || content == " " || content == "." || content == "!" || content == "?" {
+					fmt.Fprintf(w, "data: {\"type\":\"content\",\"content\":\"%s\"}\n\n", accumulatedContent)
+					w.Flush()
+					accumulatedContent = ""
+				}
 			}
 		}
 	}
 
-	fmt.Fprint(w, "data: [DONE]\n\n")
+	// Send any remaining content
+	if accumulatedContent != "" {
+		fmt.Fprintf(w, "data: {\"type\":\"content\",\"content\":\"%s\"}\n\n", accumulatedContent)
+		w.Flush()
+	}
+
+	fmt.Fprint(w, "data: {\"type\":\"done\"}\n\n")
 	w.Flush()
 }

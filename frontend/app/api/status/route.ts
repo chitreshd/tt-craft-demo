@@ -1,16 +1,25 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+const API_BASE_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // For demo purposes, you can either fetch from backend or return mock data
-    // Uncomment the following to fetch from actual backend:
-    // const response = await fetch(`${API_BASE_URL}/v1/status/12345`)
-    // if (!response.ok) throw new Error('Failed to fetch status')
-    // return NextResponse.json(await response.json())
+    const searchParams = request.nextUrl.searchParams
+    const id = searchParams.get('id')
 
-    // Mock data for demo
+    // If id is provided, fetch from backend
+    if (id) {
+      const response = await fetch(`${API_BASE_URL}/v1/status/${id}`)
+      if (!response.ok) {
+        return NextResponse.json(
+          { error: 'Failed to fetch refund status from backend' },
+          { status: response.status }
+        )
+      }
+      return NextResponse.json(await response.json())
+    }
+
+    // Otherwise, return mock data for demo
     const mockData = {
       return_id: "TX2024-12345",
       status: "APPROVED",
